@@ -1,0 +1,21 @@
+### USAGE ###
+# Function to find prior conditions by exact matching and fuzzy matching diagnosis codes 
+# Codeset list used should contain *'s to denote that a code should be fuzzy matched (i.e. E11*)
+# Ex usage: diabetes_prior = find_prior_conditions(diabetes_codeset, processed_dx_file)
+    # Processed dx file contains index_to_admit column
+
+def find_prior_conditions(codeset, dx):
+    ### Retrieve codes with * for fuzzy matching ###
+    fuzzy_match = codeset[codeset['Code'].str.contains("\\*", na=False)]
+    fuzzy_codes = list(fuzzy_match['Code'].unique())
+    ### Remove * for processing ###
+    fuzzy_codes = [s.replace("*", "") for s in fuzzy_codes]
+    ### Fuzzy matched patients ###
+    temp_condition1 = dx[dx['dx'].apply(lambda x: any(x.startswith(s) for s in fuzzy_codes))]
+    all_codes = list(codeset['Code'].unique())
+    temp_condition2 = dx[dx['dx'].isin(all_codes)]
+    temp_condition = pd.concat([temp_condition1, temp_condition2], ignore_index=True)
+    ### Create prior and post patients ###
+    # Can be edited to increase or decrease look back period
+    condition_prior = temp_condition[temp_condition['index_to_admit'].between(0, 365, inclusive='both')].rename(columns={'index_to_admit': 'ibd_to_index'}).drop_duplicates()
+    return condition_prior 
