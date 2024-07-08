@@ -4,7 +4,7 @@
 # Ex usage: diabetes_prior = find_prior_conditions(diabetes_codeset, processed_dx_file)
     # Processed dx file contains index_to_admit column
 
-def find_prior_conditions(codeset, dx):
+def find_prior_conditions(codeset, dx, condition):
     ### Retrieve codes with * for fuzzy matching ###
     fuzzy_match = codeset[codeset['Code'].str.contains("\\*", na=False)]
     fuzzy_codes = list(fuzzy_match['Code'].unique())
@@ -17,5 +17,5 @@ def find_prior_conditions(codeset, dx):
     temp_condition = pd.concat([temp_condition1, temp_condition2], ignore_index=True)
     ### Create prior and post patients ###
     # Can be edited to increase or decrease look back period
-    condition_prior = temp_condition[temp_condition['index_to_admit'].between(0, 365, inclusive='both')].rename(columns={'index_to_admit': 'ibd_to_index'}).drop_duplicates()
+    condition_prior = temp_condition[temp_condition['index_to_admit'].between(0, 365, inclusive='both')].rename(columns={'index_to_admit': f'{condition}_to_index'}).drop_duplicates()
     return condition_prior 
